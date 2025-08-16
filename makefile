@@ -12,6 +12,10 @@ docker-build:
 # 	@docker exec main ./$(basename $(file))
 # 	@rm -f $(basename $(file))
 
+.PHONY: fmt
+fmt:
+	docker compose exec main sh -c "find /workspace \( -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) -print0 | xargs -0 clang-format -i"
+
 .PHONY: clean
 clean:
 	docker compose down --rmi all --volumes --remove-orphans
