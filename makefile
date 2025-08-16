@@ -11,6 +11,10 @@ run:
 	docker compose exec main bazel build //:tinyfs
 	docker compose exec main bazel run //:tinyfs
 
+.PHONY: test
+test:
+	docker compose exec main bazel test //:main_test
+
 .PHONY: debug
 debug:
 	docker compose exec main bazel build -c dbg //:tinyfs
@@ -27,9 +31,14 @@ fmt:
 .PHONY: check
 check:
 	docker compose exec main sh -c "find /workspace \( -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) -print0 | xargs -0 cppcheck"
-	docker compose exec main bazel run //:tinyfs --run_under="valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose"
+	docker compose exec main bazel test //:tinyfs --run_under="valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose"
 
 .PHONY: clean
 clean:
 	docker compose down --rmi all --volumes --remove-orphans
 	docker system prune -a -f
+
+.PHONY: help # generate help message
+help:
+	@echo "Usage: make [target]\n"
+	@grep '^.PHONY: .* #' makefile | sed 's/\.PHONY: \(.*\) # \(.*\)/\1	\2/' | expand -t20

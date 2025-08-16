@@ -8,3 +8,11 @@ cc_binary(
         "@boost.filesystem",
     ],
 )
+
+cc_test(
+    name = "main_test",
+    srcs = ["src/main_test.cc"],
+    deps = [
+        "@googletest//:gtest_main",
+    ],
+)
