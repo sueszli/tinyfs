@@ -1,6 +1,8 @@
 #pragma once
 
 #include <boost/filesystem.hpp>
+#include <memory>
+#include <spdlog/logger.h>
 #include <string>
 
 namespace fs = boost::filesystem;
@@ -26,3 +28,16 @@ std::string read_file(const std::string &file_path);
  * @return Absolute path to the directory to serve files from
  */
 fs::path parse_cmd(int argc, char *argv[]);
+
+/**
+ * Sets up the storage directory, creating it if it doesn't exist.
+ * @param dir Path to the directory to set up
+ */
+void mkdir(const fs::path &dir);
+
+/**
+ * Initializes the global logger with stdout color sink.
+ */
+void init_logger();
+
+extern std::shared_ptr<spdlog::logger> logger;

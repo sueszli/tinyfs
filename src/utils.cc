@@ -4,13 +4,14 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <string_view>
 #include <unordered_map>
 
 namespace po = boost::program_options;
 
-extern std::shared_ptr<spdlog::logger> logger;
+std::shared_ptr<spdlog::logger> logger;
 
 std::string get_mime_type(const std::string &path) {
     static const std::unordered_map<std::string_view, std::string_view> MIME_TYPES = {{".html", "text/html"}, {".htm", "text/html"}, {".css", "text/css"}, {".js", "application/javascript"}, {".json", "application/json"}, {".png", "image/png"}, {".jpg", "image/jpeg"}, {".jpeg", "image/jpeg"}, {".gif", "image/gif"}, {".txt", "text/plain"}};
@@ -88,4 +89,17 @@ fs::path parse_cmd(int argc, char *argv[]) {
         std::cerr << "Error parsing arguments: " << e.what() << '\n';
         std::exit(EXIT_FAILURE);
     }
+}
+
+void mkdir(const fs::path &dir) {
+    if (!fs::exists(dir)) {
+        logger->info("Creating storage directory: {}", dir.string());
+        fs::create_directories(dir);
+    }
+}
+
+void init_logger() {
+    logger = spdlog::stdout_color_mt("tinyfs");
+    logger->set_level(spdlog::level::info);
+    logger->set_pattern("[%H:%M:%S] [%^%l%$] %v");
 }

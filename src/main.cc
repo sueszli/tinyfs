@@ -8,8 +8,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
 #include <string>
 #include <thread>
 #include <vector>
@@ -20,7 +18,6 @@ namespace net = boost::asio;
 namespace fs = boost::filesystem;
 using tcp = boost::asio::ip::tcp;
 
-std::shared_ptr<spdlog::logger> logger;
 std::atomic<bool> SHUTDOWN_REQUESTED{false};
 
 std::string generate_directory_listing(const std::string &dir_path, const std::string &url_path) {
@@ -244,23 +241,10 @@ void setup_signal_handlers() {
     std::signal(SIGTERM, signal_handler);
 }
 
-void setup_storage_directory(const fs::path &dir) {
-    if (!fs::exists(dir)) {
-        logger->info("Creating storage directory: {}", dir.string());
-        fs::create_directories(dir);
-    }
-}
-
-void setup_logger() {
-    logger = spdlog::stdout_color_mt("tinyfs");
-    logger->set_level(spdlog::level::info);
-    logger->set_pattern("[%H:%M:%S] [%^%l%$] %v");
-}
-
 int main(int argc, char *argv[]) {
-    setup_logger();
+    init_logger();
     fs::path files_dir = parse_cmd(argc, argv);
-    setup_storage_directory(files_dir);
+    mkdir(files_dir);
     setup_signal_handlers();
 
     try {

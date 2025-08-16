@@ -1,10 +1,11 @@
 #include "utils.hpp"
 #include <fstream>
 #include <gtest/gtest.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <vector>
 
-std::shared_ptr<spdlog::logger> logger; // can be null, not in scope of this test suite
+// logger is defined in utils.cc
 
 class GetMimeTypeTest : public ::testing::Test {
   protected:
@@ -168,51 +169,134 @@ class ParseCmdTest : public ::testing::Test {
 };
 
 TEST_F(ParseCmdTest, DefaultStorageDirectory) {
-    const char* argv[] = {"tinyfs"};
+    const char *argv[] = {"tinyfs"};
     int argc = 1;
-    
-    fs::path result = parse_cmd(argc, const_cast<char**>(argv));
+
+    fs::path result = parse_cmd(argc, const_cast<char **>(argv));
     fs::path expected = fs::absolute("workspace/files");
-    
+
     EXPECT_EQ(result, expected);
 }
 
 TEST_F(ParseCmdTest, CustomStorageDirectory) {
-    const char* argv[] = {"tinyfs", "--storage", "/custom/path"};
+    const char *argv[] = {"tinyfs", "--storage", "/custom/path"};
     int argc = 3;
-    
-    fs::path result = parse_cmd(argc, const_cast<char**>(argv));
+
+    fs::path result = parse_cmd(argc, const_cast<char **>(argv));
     fs::path expected = fs::absolute("/custom/path");
-    
+
     EXPECT_EQ(result, expected);
 }
 
 TEST_F(ParseCmdTest, ShortOptionCustomStorageDirectory) {
-    const char* argv[] = {"tinyfs", "-s", "/another/path"};
+    const char *argv[] = {"tinyfs", "-s", "/another/path"};
     int argc = 3;
-    
-    fs::path result = parse_cmd(argc, const_cast<char**>(argv));
+
+    fs::path result = parse_cmd(argc, const_cast<char **>(argv));
     fs::path expected = fs::absolute("/another/path");
-    
+
     EXPECT_EQ(result, expected);
 }
 
 TEST_F(ParseCmdTest, RelativePathConvertedToAbsolute) {
-    const char* argv[] = {"tinyfs", "--storage", "relative/path"};
+    const char *argv[] = {"tinyfs", "--storage", "relative/path"};
     int argc = 3;
-    
-    fs::path result = parse_cmd(argc, const_cast<char**>(argv));
+
+    fs::path result = parse_cmd(argc, const_cast<char **>(argv));
     fs::path expected = fs::absolute("relative/path");
-    
+
     EXPECT_EQ(result, expected);
 }
 
 TEST_F(ParseCmdTest, EmptyStorageDirectory) {
-    const char* argv[] = {"tinyfs", "--storage", ""};
+    const char *argv[] = {"tinyfs", "--storage", ""};
     int argc = 3;
-    
-    fs::path result = parse_cmd(argc, const_cast<char**>(argv));
+
+    fs::path result = parse_cmd(argc, const_cast<char **>(argv));
     fs::path expected = fs::absolute("");
-    
+
     EXPECT_EQ(result, expected);
+}
+
+class SetupStorageDirectoryTest : public ::testing::Test {
+  protected:
+    void SetUp() override {
+        if (!logger) {
+            logger = spdlog::stdout_color_mt("test_logger");
+            logger->set_level(spdlog::level::info);
+        }
+
+        test_base_dir = fs::temp_directory_path() / "tinyfs_test_storage";
+        if (fs::exists(test_base_dir)) {
+            fs::remove_all(test_base_dir);
+        }
+    }
+
+    void TearDown() override {
+        if (fs::exists(test_base_dir)) {
+            fs::remove_all(test_base_dir);
+        }
+    }
+
+    fs::path test_base_dir;
+};
+
+TEST_F(SetupStorageDirectoryTest, CreatesNonExistentDirectory) {
+    fs::path test_dir = test_base_dir / "new_directory";
+
+    ASSERT_FALSE(fs::exists(test_dir));
+    mkdir(test_dir);
+
+    EXPECT_TRUE(fs::exists(test_dir));
+    EXPECT_TRUE(fs::is_directory(test_dir));
+}
+
+TEST_F(SetupStorageDirectoryTest, ExistingDirectoryNoOp) {
+    fs::path test_dir = test_base_dir / "existing_directory";
+
+    fs::create_directories(test_dir);
+    ASSERT_TRUE(fs::exists(test_dir));
+
+    mkdir(test_dir);
+
+    EXPECT_TRUE(fs::exists(test_dir));
+    EXPECT_TRUE(fs::is_directory(test_dir));
+}
+
+TEST_F(SetupStorageDirectoryTest, CreatesNestedDirectories) {
+    fs::path test_dir = test_base_dir / "level1" / "level2" / "level3";
+
+    ASSERT_FALSE(fs::exists(test_dir));
+    ASSERT_FALSE(fs::exists(test_base_dir / "level1"));
+
+    mkdir(test_dir);
+
+    EXPECT_TRUE(fs::exists(test_dir));
+    EXPECT_TRUE(fs::is_directory(test_dir));
+    EXPECT_TRUE(fs::exists(test_base_dir / "level1"));
+    EXPECT_TRUE(fs::exists(test_base_dir / "level1" / "level2"));
+}
+
+TEST_F(SetupStorageDirectoryTest, HandlesRelativePath) {
+    fs::path relative_path = "test_relative_dir";
+
+    mkdir(relative_path);
+
+    EXPECT_TRUE(fs::exists(relative_path));
+    EXPECT_TRUE(fs::is_directory(relative_path));
+
+    if (fs::exists(relative_path)) {
+        fs::remove_all(relative_path);
+    }
+}
+
+TEST_F(SetupStorageDirectoryTest, HandlesPathWithSpaces) {
+    fs::path test_dir = test_base_dir / "directory with spaces";
+
+    ASSERT_FALSE(fs::exists(test_dir));
+
+    mkdir(test_dir);
+
+    EXPECT_TRUE(fs::exists(test_dir));
+    EXPECT_TRUE(fs::is_directory(test_dir));
 }
