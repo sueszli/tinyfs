@@ -16,6 +16,10 @@ docker-build:
 fmt:
 	docker compose exec main sh -c "find /workspace \( -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) -print0 | xargs -0 clang-format -i"
 
+.PHONY: lint
+lint:
+	docker compose exec main sh -c "find /workspace \( -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) -print0 | xargs -0 clang-tidy"
+
 .PHONY: clean
 clean:
 	docker compose down --rmi all --volumes --remove-orphans

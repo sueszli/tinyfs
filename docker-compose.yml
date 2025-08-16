@@ -24,8 +24,7 @@ services:
         RUN apt update && apt full-upgrade
 
         # dependencies
-        RUN apt update && apt install g++ -y
-        RUN apt update && apt install clang-format -y
+        RUN apt update && apt install g++ clang-format clang-tidy -y
 
         RUN apt clean && rm -rf /var/lib/apt/lists/*
         WORKDIR /workspace
