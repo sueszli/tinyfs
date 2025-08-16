@@ -6,11 +6,25 @@
      |____/        ██    ██ ██     ██    ██    ██      ███████
 
 
+
+Idea:
+
+Write the most simple HTTP file server that serves static files from ./files that you can imagine.
+
+Use as few object oriented features as possible, try to immitate golang. Keep it simple.
+
+Run the code with: `make run`
+
+Test it with: `curl -i 0.0.0.0:8888`
+
+
+
+---
+
 An HTTP file server that serves static files from a configurable directory on the hosting computer.
 
 System requirements:
 
-- Use Boost.ASIO, Boost.Beast for HTTP server implementation
 - Handle concurrent requests appropriately
 - Serve files with correct MIME types and HTTP headers
 - Return appropriate HTTP status codes (200, 404, 500, etc.)
@@ -19,36 +33,8 @@ System requirements:
 - Support graceful shutdown on SIGINT/SIGTERM
 - Write high quality code, use RAII and smart pointers where necessary
 - Write tests, handle errors
-- Nice to have: Configurable server port via command line argument (default: 8080)
 - Nice to have: Configurable storage directory via command line argument (default: "./files")
 
-# planned file tree
+Test:
 
-```
-├── BUILD
-├── README
-├── .gitignore
-└── src/
-   ├── main.cc
-   ├── server_options.cc
-   ├── server_options.h
-   ├── server_options_test.cc
-   ├── http_server.cc
-   ├── http_server.h
-   ├── http_server_test.cc
-   ├── connection.cc
-   ├── connection.h
-   ├── connection_test.cc
-   ├── request_handler.cc
-   ├── request_handler.h
-   ├── request_handler_test.cc
-   ├── mime_types.cc
-   ├── mime_types.h
-   ├── mime_types_test.cc
-   ├── file_utils.cc
-   ├── file_utils.h
-   ├── file_utils_test.cc
-   ├── string_utils.cc
-   ├── string_utils.h
-   └── string_utils_test.cc
-```
+`curl -i 0.0.0.0:8888/yippie.txt`
