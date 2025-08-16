@@ -6,3 +6,29 @@
      |____/        ██    ██ ██     ██    ██    ██      ███████
 
 
+An HTTP file server that serves static files from a configurable directory on the hosting computer.
+
+System requirements:
+
+- Use Boost.ASIO, Boost.Beast for HTTP server implementation
+- Handle concurrent requests appropriately
+- Serve files with correct MIME types and HTTP headers
+- Return appropriate HTTP status codes (200, 404, 500, etc.)
+- Implement error handling with exceptions or error codes
+- Nice to have: Also support directories
+- Support graceful shutdown on SIGINT/SIGTERM
+- Nice to have: Configurable server port via command line argument (default: 8080)
+- Nice to have: Configurable storage directory via command line argument (default: "./files")
+
+Build requirements:
+
+- Support both Debug and Release builds
+
+Code quality:
+
+- Use C++17 or later
+- Use proper RAII, smart pointers
+- Include compiler warnings and treat warnings as errors
+- Organize code
+- Write tests, handle errors
+- Write docs

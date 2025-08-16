@@ -20,6 +20,10 @@ fmt:
 lint:
 	docker compose exec main sh -c "find /workspace \( -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) -print0 | xargs -0 clang-tidy"
 
+# .PHONY: verify
+# verify:
+# use cppcheck, valgrind, ASan/TSan/MSan
+
 .PHONY: clean
 clean:
 	docker compose down --rmi all --volumes --remove-orphans

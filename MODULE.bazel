@@ -3,7 +3,6 @@ module(
     version = "1.0",
 )
 
-# registry: https://registry.bazel.build/
 bazel_dep(name = "googletest", version = "1.17.0")
 bazel_dep(name = "boost.asio", version = "1.88.0.bcr.1")
 bazel_dep(name = "boost.beast", version = "1.87.0.bcr.1")
