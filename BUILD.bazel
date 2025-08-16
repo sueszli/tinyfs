@@ -1,0 +1,10 @@
+cc_binary(
+    name = "tinyfs",
+    srcs = ["src/main.cc"],
+    deps = [
+        "@boost.beast",
+        "@boost.asio", 
+        "@boost.system",
+        "@boost.filesystem",
+    ],
+)

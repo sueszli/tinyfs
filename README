@@ -17,21 +17,10 @@ System requirements:
 - Implement error handling with exceptions or error codes
 - Nice to have: Also support directories
 - Support graceful shutdown on SIGINT/SIGTERM
+- Write high quality code, use RAII and smart pointers where necessary
+- Write tests, handle errors
 - Nice to have: Configurable server port via command line argument (default: 8080)
 - Nice to have: Configurable storage directory via command line argument (default: "./files")
-
-Build requirements:
-
-- Support both Debug and Release builds
-
-Code quality:
-
-- Use C++17 or later
-- Use proper RAII, smart pointers
-- Include compiler warnings and treat warnings as errors
-- Organize code
-- Write tests, handle errors
-- Write docs
 
 # planned file tree
 

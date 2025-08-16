@@ -1,0 +1,15 @@
+build --cxxopt=-std=c++17
+build --host_cxxopt=-std=c++17
+
+build --copt=-Wall
+build --copt=-Wextra
+build --copt=-Wpedantic
+build --copt=-Wunused-variable
+build --copt=-Wunused-parameter
+build --copt=-Wshadow
+build --copt=-Wformat-security
+
+build:release -c opt
+build:release --strip=always
+build:release --define=NDEBUG=1
+build:release --copt=-O3

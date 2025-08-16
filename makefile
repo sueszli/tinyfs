@@ -6,23 +6,28 @@ docker-up:
 docker-build:
 	docker compose build
 
-# .PHONY: run
-# run:
-# 	@docker exec main g++ -o $(basename $(file)) $(file) -std=c++23
-# 	@docker exec main ./$(basename $(file))
-# 	@rm -f $(basename $(file))
+.PHONY: run
+run:
+	docker compose exec main bazel build //:tinyfs
+	docker compose exec main bazel run //:tinyfs
+
+.PHONY: debug
+debug:
+	docker compose exec main bazel build -c dbg //:tinyfs
+	docker compose exec main gdb bazel-bin/tinyfs
+
+.PHONY: release
+release:
+	docker compose exec main bazel build --config=release //:tinyfs
 
 .PHONY: fmt
 fmt:
 	docker compose exec main sh -c "find /workspace \( -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) -print0 | xargs -0 clang-format -i"
 
-.PHONY: lint
-lint:
-	docker compose exec main sh -c "find /workspace \( -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) -print0 | xargs -0 clang-tidy"
-
-# .PHONY: verify
-# verify:
-# use cppcheck, valgrind, ASan/TSan/MSan
+.PHONY: check
+check:
+	docker compose exec main sh -c "find /workspace \( -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) -print0 | xargs -0 cppcheck"
+	docker compose exec main bazel run //:tinyfs --run_under="valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose"
 
 .PHONY: clean
 clean:
