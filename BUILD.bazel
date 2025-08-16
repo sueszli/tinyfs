@@ -1,11 +1,17 @@
 cc_binary(
-    name = "tinyfs",
-    srcs = ["src/main.cc"],
+    name = "main",
+    srcs = [
+        "src/main.cc",
+        "src/utils.cc",
+        "src/utils.hpp",
+    ],
     deps = [
         "@boost.beast",
         "@boost.asio", 
         "@boost.system",
         "@boost.filesystem",
+        "@boost.program_options",
+        "@spdlog",
     ],
 )
 
@@ -14,5 +20,20 @@ cc_test(
     srcs = ["src/main_test.cc"],
     deps = [
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "utils_test",
+    srcs = [
+        "src/utils_test.cc",
+        "src/utils.cc",
+        "src/utils.hpp",
+    ],
+    deps = [
+        "@googletest//:gtest_main",
+        "@boost.filesystem",
+        "@boost.program_options",
+        "@spdlog",
     ],
 )

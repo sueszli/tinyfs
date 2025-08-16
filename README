@@ -7,34 +7,11 @@
 
 
 
-Idea:
-
-Write the most simple HTTP file server that serves static files from ./files that you can imagine.
-
-Use as few object oriented features as possible, try to immitate golang. Keep it simple.
-
-Run the code with: `make run`
-
-Test it with: `curl -i 0.0.0.0:8888`
-
-
-
----
-
 An HTTP file server that serves static files from a configurable directory on the hosting computer.
 
-System requirements:
+- Nice Ascii art on terminal
+- Nice to have: Also support directories, turn it into an interactive html you can click around on
 
-- Handle concurrent requests appropriately
-- Serve files with correct MIME types and HTTP headers
-- Return appropriate HTTP status codes (200, 404, 500, etc.)
-- Implement error handling with exceptions or error codes
-- Nice to have: Also support directories
-- Support graceful shutdown on SIGINT/SIGTERM
-- Write high quality code, use RAII and smart pointers where necessary
-- Write tests, handle errors
-- Nice to have: Configurable storage directory via command line argument (default: "./files")
-
-Test:
-
-`curl -i 0.0.0.0:8888/yippie.txt`
+- Extend the code. Keep it simple. try to immitate golang. Use as few object oriented features as possible.
+- Run the code with: `make run`
+- Test it with: `curl -i 0.0.0.0:8888`
