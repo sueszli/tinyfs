@@ -1,0 +1,6 @@
+.git
+.cache
+docs
+bazel-out
+build
+tmp

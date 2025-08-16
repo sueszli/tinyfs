@@ -32,3 +32,34 @@ Code quality:
 - Organize code
 - Write tests, handle errors
 - Write docs
+
+# planned file tree
+
+```
+├── BUILD
+├── README
+├── .gitignore
+└── src/
+   ├── main.cc
+   ├── server_options.cc
+   ├── server_options.h
+   ├── server_options_test.cc
+   ├── http_server.cc
+   ├── http_server.h
+   ├── http_server_test.cc
+   ├── connection.cc
+   ├── connection.h
+   ├── connection_test.cc
+   ├── request_handler.cc
+   ├── request_handler.h
+   ├── request_handler_test.cc
+   ├── mime_types.cc
+   ├── mime_types.h
+   ├── mime_types_test.cc
+   ├── file_utils.cc
+   ├── file_utils.h
+   ├── file_utils_test.cc
+   ├── string_utils.cc
+   ├── string_utils.h
+   └── string_utils_test.cc
+```
