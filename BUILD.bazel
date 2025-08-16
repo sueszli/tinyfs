@@ -32,6 +32,7 @@ cc_test(
     ],
     deps = [
         "@googletest//:gtest_main",
+        "@boost.beast",
         "@boost.filesystem",
         "@boost.program_options",
         "@spdlog",

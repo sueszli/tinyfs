@@ -7,6 +7,86 @@
 
 // logger is defined in utils.cc
 
+class ResponseFunctionTest : public ::testing::Test {
+  protected:
+    void SetUp() override { response = http::response<http::string_body>{}; }
+
+    void TearDown() override {}
+
+    http::response<http::string_body> response;
+};
+
+TEST_F(ResponseFunctionTest, SetResponse200) {
+    const std::string body = "Test content";
+    const std::string mime_type = "text/plain";
+
+    set_response_200(response, body, mime_type);
+
+    EXPECT_EQ(response.result(), http::status::ok);
+    EXPECT_EQ(response.body(), body);
+    EXPECT_EQ(response[http::field::content_type], mime_type);
+    EXPECT_EQ(response[http::field::server], "TinyFS");
+}
+
+TEST_F(ResponseFunctionTest, SetResponse404) {
+    set_response_404(response);
+
+    EXPECT_EQ(response.result(), http::status::not_found);
+    EXPECT_EQ(response[http::field::content_type], "text/html");
+    EXPECT_EQ(response[http::field::server], "TinyFS");
+    EXPECT_TRUE(response.body().find("404 Not Found") != std::string::npos);
+}
+
+TEST_F(ResponseFunctionTest, SetResponse403) {
+    set_response_403(response);
+
+    EXPECT_EQ(response.result(), http::status::forbidden);
+    EXPECT_EQ(response[http::field::content_type], "text/html");
+    EXPECT_EQ(response[http::field::server], "TinyFS");
+    EXPECT_TRUE(response.body().find("403 Forbidden") != std::string::npos);
+}
+
+TEST_F(ResponseFunctionTest, SetResponse405) {
+    set_response_405(response);
+
+    EXPECT_EQ(response.result(), http::status::method_not_allowed);
+    EXPECT_EQ(response[http::field::content_type], "text/html");
+    EXPECT_EQ(response[http::field::server], "TinyFS");
+    EXPECT_TRUE(response.body().find("405 Method Not Allowed") != std::string::npos);
+}
+
+TEST_F(ResponseFunctionTest, SetResponse500) {
+    set_response_500(response);
+
+    EXPECT_EQ(response.result(), http::status::internal_server_error);
+    EXPECT_EQ(response[http::field::content_type], "text/html");
+    EXPECT_EQ(response[http::field::server], "TinyFS");
+    EXPECT_TRUE(response.body().find("500 Internal Server Error") != std::string::npos);
+}
+
+TEST_F(ResponseFunctionTest, SetResponseGeneric) {
+    const std::string body = "Custom response";
+    const std::string content_type = "application/json";
+
+    set_response_generic(response, http::status::created, body, content_type);
+
+    EXPECT_EQ(response.result(), http::status::created);
+    EXPECT_EQ(response.body(), body);
+    EXPECT_EQ(response[http::field::content_type], content_type);
+    EXPECT_EQ(response[http::field::server], "TinyFS");
+}
+
+TEST_F(ResponseFunctionTest, SetResponseDefaultContentType) {
+    const std::string body = "Default content type test";
+
+    set_response_generic(response, http::status::accepted, body, "text/html");
+
+    EXPECT_EQ(response.result(), http::status::accepted);
+    EXPECT_EQ(response.body(), body);
+    EXPECT_EQ(response[http::field::content_type], "text/html");
+    EXPECT_EQ(response[http::field::server], "TinyFS");
+}
+
 class GetMimeTypeTest : public ::testing::Test {
   protected:
     void SetUp() override {}

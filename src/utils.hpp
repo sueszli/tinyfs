@@ -1,11 +1,55 @@
 #pragma once
 
+#include <boost/beast.hpp>
 #include <boost/filesystem.hpp>
 #include <memory>
 #include <spdlog/logger.h>
 #include <string>
 
+namespace beast = boost::beast;
+namespace http = beast::http;
 namespace fs = boost::filesystem;
+
+/**
+ * Sets a generic HTTP response with custom status, body, and content type.
+ * @param res The HTTP response object to modify
+ * @param status The HTTP status code
+ * @param body The response body content
+ * @param content_type The content type of the response
+ */
+void set_response_generic(http::response<http::string_body> &res, http::status status, const std::string &body, const std::string &content_type);
+
+/**
+ * Sets 200 OK response with custom body and MIME type.
+ * @param res The HTTP response object to modify
+ * @param body The response body content
+ * @param mime_type The MIME type of the response
+ */
+void set_response_200(http::response<http::string_body> &res, const std::string &body, const std::string &mime_type);
+
+/**
+ * Sets 403 Forbidden response.
+ * @param res The HTTP response object to modify
+ */
+void set_response_403(http::response<http::string_body> &res);
+
+/**
+ * Sets 404 Not Found response.
+ * @param res The HTTP response object to modify
+ */
+void set_response_404(http::response<http::string_body> &res);
+
+/**
+ * Sets 405 Method Not Allowed response.
+ * @param res The HTTP response object to modify
+ */
+void set_response_405(http::response<http::string_body> &res);
+
+/**
+ * Sets 500 Internal Server Error response.
+ * @param res The HTTP response object to modify
+ */
+void set_response_500(http::response<http::string_body> &res);
 
 /**
  * Determines the MIME type based on file extension.

@@ -13,6 +13,24 @@ namespace po = boost::program_options;
 
 std::shared_ptr<spdlog::logger> logger;
 
+void set_response_generic(http::response<http::string_body> &res, http::status status, const std::string &body, const std::string &content_type) {
+    res.set(http::field::server, "TinyFS");
+    res.result(status);
+    res.set(http::field::content_type, content_type);
+    res.body() = body;
+    res.prepare_payload();
+}
+
+void set_response_200(http::response<http::string_body> &res, const std::string &body, const std::string &mime_type) { set_response_generic(res, http::status::ok, body, mime_type); }
+
+void set_response_404(http::response<http::string_body> &res) { set_response_generic(res, http::status::not_found, "<html><body><h1>404 Not Found</h1><p>The requested resource was not found.</p></body></html>", "text/html"); }
+
+void set_response_403(http::response<http::string_body> &res) { set_response_generic(res, http::status::forbidden, "<html><body><h1>403 Forbidden</h1><p>Access denied.</p></body></html>", "text/html"); }
+
+void set_response_405(http::response<http::string_body> &res) { set_response_generic(res, http::status::method_not_allowed, "<html><body><h1>405 Method Not Allowed</h1><p>This method is not allowed.</p></body></html>", "text/html"); }
+
+void set_response_500(http::response<http::string_body> &res) { set_response_generic(res, http::status::internal_server_error, "<html><body><h1>500 Internal Server Error</h1><p>Server error occurred.</p></body></html>", "text/html"); }
+
 std::string get_mime_type(const std::string &path) {
     static const std::unordered_map<std::string_view, std::string_view> MIME_TYPES = {{".html", "text/html"}, {".htm", "text/html"}, {".css", "text/css"}, {".js", "application/javascript"}, {".json", "application/json"}, {".png", "image/png"}, {".jpg", "image/jpeg"}, {".jpeg", "image/jpeg"}, {".gif", "image/gif"}, {".txt", "text/plain"}};
 
@@ -36,17 +54,11 @@ std::string read_file(const std::string &file_path) {
     try {
         std::ifstream file(file_path, std::ios::binary | std::ios::ate);
         if (!file.is_open()) {
-            if (logger) {
-                logger->error("Failed to open file: {}", file_path);
-            }
             return {};
         }
 
         const auto size = file.tellg(); // alloc based on file size
         if (size < 0) {
-            if (logger) {
-                logger->error("Failed to determine file size: {}", file_path);
-            }
             return {};
         }
 
@@ -58,9 +70,6 @@ std::string read_file(const std::string &file_path) {
 
         return content;
     } catch (const std::exception &e) {
-        if (logger) {
-            logger->error("Exception reading file {}: {}", file_path, e.what());
-        }
         return {};
     }
 }
@@ -93,7 +102,6 @@ fs::path parse_cmd(int argc, char *argv[]) {
 
 void mkdir(const fs::path &dir) {
     if (!fs::exists(dir)) {
-        logger->info("Creating storage directory: {}", dir.string());
         fs::create_directories(dir);
     }
 }

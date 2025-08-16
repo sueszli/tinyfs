@@ -12,10 +12,7 @@
 #include <thread>
 #include <vector>
 
-namespace beast = boost::beast;
-namespace http = beast::http;
 namespace net = boost::asio;
-namespace fs = boost::filesystem;
 using tcp = boost::asio::ip::tcp;
 
 std::atomic<bool> SHUTDOWN_REQUESTED{false};
@@ -96,7 +93,12 @@ std::string generate_directory_listing(const std::string &dir_path, const std::s
 }
 
 void handle_request(http::request<http::string_body> &req, http::response<http::string_body> &res, const fs::path &files_dir) {
-    logger->info("Handling {} request for: {}", req.method_string(), req.target());
+    logger->info("Received {} request for {}", req.method_string(), req.target());
+    if (req.method() != http::verb::get) {
+        logger->warn("Method not allowed: {}", req.method_string());
+        set_response_405(res);
+        return;
+    }
 
     try {
         std::string target = std::string(req.target());
@@ -104,13 +106,11 @@ void handle_request(http::request<http::string_body> &req, http::response<http::
 
         if (!fs::exists(file_path)) {
             logger->warn("File not found: {}", file_path.string());
-            res.result(http::status::not_found);
-            res.set(http::field::content_type, "text/html");
-            res.body() = "<html><body><h1>404 Not Found</h1><p>The requested resource was not found.</p></body></html>";
-            res.prepare_payload();
+            set_response_404(res);
             return;
         }
 
+        // directory response mode
         if (fs::is_directory(file_path)) {
             fs::path index_path = file_path / "index.html";
 
@@ -126,42 +126,27 @@ void handle_request(http::request<http::string_body> &req, http::response<http::
             }
 
             std::string listing = generate_directory_listing(file_path.string(), target);
-            res.result(http::status::ok);
-            res.set(http::field::content_type, "text/html");
-            res.body() = listing;
-            res.prepare_payload();
+            set_response_200(res, listing, "text/html");
             return;
         }
 
+        // file response mode
         if (fs::is_regular_file(file_path)) {
             std::string content = read_file(file_path.string());
             if (content.empty()) {
                 logger->error("Failed to read file: {}", file_path.string());
-                res.result(http::status::internal_server_error);
-                res.set(http::field::content_type, "text/html");
-                res.body() = "<html><body><h1>500 Internal Server Error</h1><p>Failed to read file.</p></body></html>";
-                res.prepare_payload();
+                set_response_500(res);
                 return;
             }
 
-            res.result(http::status::ok);
-            res.set(http::field::content_type, get_mime_type(file_path.string()));
-            res.body() = content;
-            res.prepare_payload();
+            set_response_200(res, content, get_mime_type(file_path.string()));
             return;
         }
-
-        res.result(http::status::forbidden);
-        res.set(http::field::content_type, "text/html");
-        res.body() = "<html><body><h1>403 Forbidden</h1><p>Access denied.</p></body></html>";
-        res.prepare_payload();
+        set_response_403(res);
 
     } catch (const std::exception &e) {
         logger->error("Exception handling request: {}", e.what());
-        res.result(http::status::internal_server_error);
-        res.set(http::field::content_type, "text/html");
-        res.body() = "<html><body><h1>500 Internal Server Error</h1><p>Server error occurred.</p></body></html>";
-        res.prepare_payload();
+        set_response_500(res);
     }
 }
 
@@ -181,18 +166,6 @@ void session(tcp::socket socket, const fs::path &files_dir) {
     }
 }
 
-std::shared_ptr<tcp::acceptor> initialize_server(net::io_context &ioc, const fs::path &files_dir) {
-    auto const address = net::ip::make_address("0.0.0.0");
-    auto const port = static_cast<unsigned short>(8888);
-
-    auto acceptor = std::make_shared<tcp::acceptor>(ioc, tcp::endpoint{address, port});
-
-    logger->info("TinyFS HTTP Server starting on {}:{}", address.to_string(), port);
-    logger->info("Serving files from: {}", files_dir.string());
-
-    return acceptor;
-}
-
 void run_server(net::io_context &ioc, std::shared_ptr<tcp::acceptor> acceptor, const fs::path &files_dir) {
     std::function<void()> do_accept = [&]() {
         auto socket = std::make_shared<tcp::socket>(ioc);
@@ -205,7 +178,6 @@ void run_server(net::io_context &ioc, std::shared_ptr<tcp::acceptor> acceptor, c
             }
         });
     };
-
     do_accept();
 
     std::vector<std::thread> threads;
@@ -221,13 +193,11 @@ void run_server(net::io_context &ioc, std::shared_ptr<tcp::acceptor> acceptor, c
     logger->info("Shutting down server...");
     acceptor->close();
     ioc.stop();
-
     for (auto &t : threads) {
         if (t.joinable()) {
             t.join();
         }
     }
-
     logger->info("Server shutdown complete");
 }
 
@@ -248,18 +218,19 @@ int main(int argc, char *argv[]) {
     setup_signal_handlers();
 
     try {
-        net::io_context ioc{static_cast<int>(std::thread::hardware_concurrency())};
-        auto acceptor = initialize_server(ioc, files_dir);
+        net::io_context ioc{static_cast<int>(std::thread::hardware_concurrency())}; // utilize all cores
+        auto const address = net::ip::make_address("0.0.0.0");
+        auto const port = static_cast<unsigned short>(8888); // hard coded in docker-compose.yml
+        auto acceptor = std::make_shared<tcp::acceptor>(ioc, tcp::endpoint{address, port});
+        logger->info("Serving files from {} on {}:{}", files_dir.string(), address.to_string(), port);
         run_server(ioc, acceptor, files_dir);
 
     } catch (const std::exception &e) {
         if (logger) {
             logger->error("Fatal error: {}", e.what());
-        } else {
-            std::cerr << "Fatal error: " << e.what() << std::endl;
         }
+        std::cerr << "Fatal error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-
     return EXIT_SUCCESS;
 }
