@@ -16,7 +16,7 @@ Create an HTTP server application that serves static files from a configurable d
    - Use smart pointers where appropriate
    - Implement proper error handling with exceptions or error codes
    - Support graceful shutdown on SIGINT/SIGTERM
-   - Nice to have: Configurable server port via command line argument (default: 8080)
+   - Nice to have: Configurable server port via command line argument (default: 8080) ❌
    - Nice to have: Configurable storage directory via command line argument (default: "./files")
 3. **Build System Configuration** ✅
    - Use CMake, Bazel, or equivalent modern build tools ✅

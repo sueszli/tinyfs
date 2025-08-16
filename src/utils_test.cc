@@ -160,3 +160,59 @@ TEST_F(ReadFileTest, FileWithSpecialCharacters) {
 
     std::remove(temp_file.c_str());
 }
+
+class ParseCmdTest : public ::testing::Test {
+  protected:
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+TEST_F(ParseCmdTest, DefaultStorageDirectory) {
+    const char* argv[] = {"tinyfs"};
+    int argc = 1;
+    
+    fs::path result = parse_cmd(argc, const_cast<char**>(argv));
+    fs::path expected = fs::absolute("workspace/files");
+    
+    EXPECT_EQ(result, expected);
+}
+
+TEST_F(ParseCmdTest, CustomStorageDirectory) {
+    const char* argv[] = {"tinyfs", "--storage", "/custom/path"};
+    int argc = 3;
+    
+    fs::path result = parse_cmd(argc, const_cast<char**>(argv));
+    fs::path expected = fs::absolute("/custom/path");
+    
+    EXPECT_EQ(result, expected);
+}
+
+TEST_F(ParseCmdTest, ShortOptionCustomStorageDirectory) {
+    const char* argv[] = {"tinyfs", "-s", "/another/path"};
+    int argc = 3;
+    
+    fs::path result = parse_cmd(argc, const_cast<char**>(argv));
+    fs::path expected = fs::absolute("/another/path");
+    
+    EXPECT_EQ(result, expected);
+}
+
+TEST_F(ParseCmdTest, RelativePathConvertedToAbsolute) {
+    const char* argv[] = {"tinyfs", "--storage", "relative/path"};
+    int argc = 3;
+    
+    fs::path result = parse_cmd(argc, const_cast<char**>(argv));
+    fs::path expected = fs::absolute("relative/path");
+    
+    EXPECT_EQ(result, expected);
+}
+
+TEST_F(ParseCmdTest, EmptyStorageDirectory) {
+    const char* argv[] = {"tinyfs", "--storage", ""};
+    int argc = 3;
+    
+    fs::path result = parse_cmd(argc, const_cast<char**>(argv));
+    fs::path expected = fs::absolute("");
+    
+    EXPECT_EQ(result, expected);
+}
