@@ -9,9 +9,10 @@
 
 An HTTP file server that serves static files from a configurable directory on the hosting computer.
 
-- Nice Ascii art on terminal
+- Nice to have: Ascii art on terminal
 - Nice to have: Also support directories, turn it into an interactive html you can click around on
 
-- Extend the code. Keep it simple. try to immitate golang. Use as few object oriented features as possible.
-- Run the code with: `make run`
-- Test it with: `curl -i 0.0.0.0:8888`
+```
+make run
+curl -i 0.0.0.0:8888
+```
