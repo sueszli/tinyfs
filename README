@@ -6,13 +6,19 @@
      |____/        ██    ██ ██     ██    ██    ██      ███████
 
 
+A lightweight HTTP file server implementation using Bazel and Boost.Beast,
+created as my first C++ learning project to explore network programming.
 
-An HTTP file server that serves static files from a configurable directory on the hosting computer.
-
-- Nice to have: Ascii art on terminal
-- Nice to have: Also support directories, turn it into an interactive html you can click around on
+Usage:
 
 ```
+make help
+
+# server
+make docker-up
+make test
 make run
+
+# client
 curl -i 0.0.0.0:8888
 ```

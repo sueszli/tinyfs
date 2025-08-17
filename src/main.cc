@@ -110,7 +110,7 @@ void handle_request(http::request<http::string_body> &req, http::response<http::
             return;
         }
 
-        // directory response mode
+        // directory response mode -------> work in progress
         if (fs::is_directory(file_path)) {
             fs::path index_path = file_path / "index.html";
 
@@ -130,7 +130,7 @@ void handle_request(http::request<http::string_body> &req, http::response<http::
             return;
         }
 
-        // file response mode
+        // file response mode ---------> doesn't quite work yet
         if (fs::is_regular_file(file_path)) {
             std::string content = read_file(file_path.string());
             if (content.empty()) {
