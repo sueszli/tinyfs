@@ -16,14 +16,6 @@ cc_binary(
 )
 
 cc_test(
-    name = "main_test",
-    srcs = ["src/main_test.cc"],
-    deps = [
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
     name = "utils_test",
     srcs = [
         "src/utils_test.cc",

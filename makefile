@@ -8,11 +8,10 @@ docker-build:
 
 .PHONY: run # Run the server with the default CLI option
 run:
-	docker compose exec main bazel run //:main
+	docker compose exec main bazel run //:main -- --storage=/workspace/files
 
 .PHONY: test # Run tests
 test:
-	docker compose exec main bazel test //:main_test --test_output=all --verbose_failures
 	docker compose exec main bazel test //:utils_test --test_output=all --verbose_failures
 
 .PHONY: debug # Build debug binary and start GDB

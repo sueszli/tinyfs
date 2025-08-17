@@ -175,6 +175,8 @@ class ReadFileTest : public ::testing::Test {
   protected:
     void SetUp() override {}
     void TearDown() override {}
+
+    ServerConfig config;
 };
 
 TEST_F(ReadFileTest, SuccessfulFileReading) {
@@ -185,7 +187,7 @@ TEST_F(ReadFileTest, SuccessfulFileReading) {
     out << test_content;
     out.close();
 
-    std::string result = read_file(temp_file);
+    std::string result = read_file(temp_file, config);
     EXPECT_EQ(result, test_content);
 
     std::remove(temp_file.c_str());
@@ -194,7 +196,7 @@ TEST_F(ReadFileTest, SuccessfulFileReading) {
 TEST_F(ReadFileTest, NonExistentFile) {
     const std::string non_existent_file = "/tmp/this_file_does_not_exist_12345.txt";
 
-    std::string result = read_file(non_existent_file);
+    std::string result = read_file(non_existent_file, config);
     EXPECT_TRUE(result.empty());
 }
 
@@ -204,7 +206,7 @@ TEST_F(ReadFileTest, EmptyFile) {
     std::ofstream out(temp_file);
     out.close();
 
-    std::string result = read_file(temp_file);
+    std::string result = read_file(temp_file, config);
     EXPECT_TRUE(result.empty());
 
     std::remove(temp_file.c_str());
@@ -218,7 +220,7 @@ TEST_F(ReadFileTest, BinaryFileReading) {
     out.write(binary_data.data(), binary_data.size());
     out.close();
 
-    std::string result = read_file(temp_file);
+    std::string result = read_file(temp_file, config);
     EXPECT_EQ(result.size(), binary_data.size());
 
     for (size_t i = 0; i < binary_data.size(); ++i) {
@@ -236,7 +238,7 @@ TEST_F(ReadFileTest, FileWithSpecialCharacters) {
     out << test_content;
     out.close();
 
-    std::string result = read_file(temp_file);
+    std::string result = read_file(temp_file, config);
     EXPECT_EQ(result, test_content);
 
     std::remove(temp_file.c_str());
@@ -247,16 +249,6 @@ class ParseCmdTest : public ::testing::Test {
     void SetUp() override {}
     void TearDown() override {}
 };
-
-TEST_F(ParseCmdTest, DefaultStorageDirectory) {
-    const char *argv[] = {"tinyfs"};
-    int argc = 1;
-
-    fs::path result = parse_cmd(argc, const_cast<char **>(argv));
-    fs::path expected = fs::absolute("workspace/files");
-
-    EXPECT_EQ(result, expected);
-}
 
 TEST_F(ParseCmdTest, CustomStorageDirectory) {
     const char *argv[] = {"tinyfs", "--storage", "/custom/path"};
@@ -292,10 +284,7 @@ TEST_F(ParseCmdTest, EmptyStorageDirectory) {
     const char *argv[] = {"tinyfs", "--storage", ""};
     int argc = 3;
 
-    fs::path result = parse_cmd(argc, const_cast<char **>(argv));
-    fs::path expected = fs::absolute("");
-
-    EXPECT_EQ(result, expected);
+    EXPECT_DEATH(parse_cmd(argc, const_cast<char **>(argv)), "Storage directory cannot be empty");
 }
 
 class SetupStorageDirectoryTest : public ::testing::Test {

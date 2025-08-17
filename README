@@ -20,13 +20,10 @@ make test
 make run
 
 # client
-curl -i 0.0.0.0:8888
+curl -X GET -i http://0.0.0.0:8888
 ```
 
 
 
 TODO:
-- write tests for main
-- get single file retrieval working
-- get directory listing working
 - run container from scratch, see if it works

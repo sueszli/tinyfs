@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <string_view>
@@ -12,6 +13,23 @@
 namespace po = boost::program_options;
 
 std::shared_ptr<spdlog::logger> logger;
+
+ServerConfig ServerConfig::load_from_env() {
+    ServerConfig config;
+    if (const char *env_port = std::getenv("TINYFS_PORT")) {
+        config.port = static_cast<unsigned short>(std::stoul(env_port));
+    }
+    if (const char *env_addr = std::getenv("TINYFS_ADDRESS")) {
+        config.address = env_addr;
+    }
+    if (const char *env_poll = std::getenv("TINYFS_POLL_MS")) {
+        config.shutdown_poll_ms = std::stoul(env_poll);
+    }
+    if (const char *env_max_size = std::getenv("TINYFS_MAX_FILE_MB")) {
+        config.max_file_size_mb = std::stoul(env_max_size);
+    }
+    return config;
+}
 
 void set_response_generic(http::response<http::string_body> &res, http::status status, const std::string &body, const std::string &content_type) {
     res.set(http::field::server, "TinyFS");
@@ -45,26 +63,48 @@ std::string get_mime_type(const std::string &path) {
     return it != MIME_TYPES.end() ? std::string(it->second) : std::string(DEFAULT_MIME_TYPE);
 }
 
-std::string read_file(const std::string &file_path) {
+std::string read_file(const std::string &file_path, const ServerConfig &config) { return read_file_safe(file_path, config.max_file_size_mb); }
+
+std::string read_file_safe(const std::string &file_path, size_t max_size_mb) {
     try {
         std::ifstream file(file_path, std::ios::binary | std::ios::ate);
         if (!file.is_open()) {
+            if (logger) {
+                logger->error("Failed to open file: {}", file_path);
+            }
             return {};
         }
 
-        const auto size = file.tellg(); // alloc based on file size
+        const auto size = file.tellg();
         if (size < 0) {
+            if (logger) {
+                logger->error("Failed to get file size: {}", file_path);
+            }
+            return {};
+        }
+
+        const size_t max_size_bytes = max_size_mb * 1024 * 1024;
+        if (static_cast<size_t>(size) > max_size_bytes) {
+            if (logger) {
+                logger->warn("File too large: {} ({} bytes, max {} MB)", file_path, static_cast<size_t>(size), max_size_mb);
+            }
             return {};
         }
 
         std::string content;
         content.reserve(static_cast<size_t>(size));
 
-        file.seekg(0, std::ios::beg); // seek back to 0
+        file.seekg(0, std::ios::beg);
         content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
 
+        if (logger) {
+            logger->debug("Successfully read file: {} ({} bytes)", file_path, static_cast<size_t>(size));
+        }
         return content;
     } catch (const std::exception &e) {
+        if (logger) {
+            logger->error("Exception reading file {}: {}", file_path, e.what());
+        }
         return {};
     }
 }
@@ -72,37 +112,82 @@ std::string read_file(const std::string &file_path) {
 fs::path parse_cmd(int argc, char *argv[]) {
     try {
         po::options_description desc("TinyFS HTTP Server Options");
-        desc.add_options()("help,h", "Show this help message")("storage,s", po::value<std::string>()->default_value("workspace/files"), "Storage directory path (default: workspace/files)");
+        desc.add_options()("help,h", "Show this help message")("storage,s", po::value<std::string>()->required(), "Storage directory path (required)");
 
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
-        po::notify(vm);
 
         if (vm.count("help")) {
             std::cout << desc << '\n';
             std::exit(EXIT_SUCCESS);
         }
 
-        const auto storage_dir = vm["storage"].as<std::string>();
-        return fs::absolute(storage_dir);
+        po::notify(vm);
 
+        const auto storage_dir = vm["storage"].as<std::string>();
+        if (storage_dir.empty()) {
+            throw std::invalid_argument("Storage directory cannot be empty");
+        }
+
+        auto absolute_path = fs::absolute(storage_dir);
+        if (logger) {
+            logger->info("Using storage directory: {}", absolute_path.string());
+        }
+        return absolute_path;
+
+    } catch (const po::required_option &e) {
+        const std::string error_msg = "Missing required argument: " + std::string(e.what());
+        if (logger) {
+            logger->error(error_msg);
+        } else {
+            std::cerr << error_msg << '\n';
+        }
+        std::exit(EXIT_FAILURE);
     } catch (const po::error &e) {
-        std::cerr << "Command line error: " << e.what() << '\n';
+        const std::string error_msg = "Command line error: " + std::string(e.what());
+        if (logger) {
+            logger->error(error_msg);
+        } else {
+            std::cerr << error_msg << '\n';
+        }
         std::exit(EXIT_FAILURE);
     } catch (const std::exception &e) {
-        std::cerr << "Error parsing arguments: " << e.what() << '\n';
+        const std::string error_msg = "Error parsing arguments: " + std::string(e.what());
+        if (logger) {
+            logger->error(error_msg);
+        } else {
+            std::cerr << error_msg << '\n';
+        }
         std::exit(EXIT_FAILURE);
     }
 }
 
 void mkdir(const fs::path &dir) {
-    if (!fs::exists(dir)) {
-        fs::create_directories(dir);
+    try {
+        if (!fs::exists(dir)) {
+            fs::create_directories(dir);
+            if (logger) {
+                logger->info("Created directory: {}", dir.string());
+            }
+        } else if (!fs::is_directory(dir)) {
+            throw std::runtime_error("Path exists but is not a directory");
+        }
+    } catch (const std::exception &e) {
+        const std::string error_msg = "Failed to create directory " + dir.string() + ": " + e.what();
+        if (logger) {
+            logger->error(error_msg);
+        } else {
+            std::cerr << error_msg << '\n';
+        }
+        throw;
     }
 }
 
 void init_logger() {
-    logger = spdlog::stdout_color_mt("tinyfs");
-    logger->set_level(spdlog::level::info);
-    logger->set_pattern("[%H:%M:%S] [%^%l%$] %v");
+    static std::once_flag flag;
+    std::call_once(flag, []() {
+        logger = spdlog::stdout_color_mt("tinyfs");
+        logger->set_level(spdlog::level::info);
+        logger->set_pattern("[%H:%M:%S] [%^%l%$] %v");
+    });
 }
