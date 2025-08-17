@@ -6,8 +6,8 @@
      |____/        ██    ██ ██     ██    ██    ██      ███████
 
 
-A lightweight HTTP file server implementation using Bazel and Boost.Beast,
-created as my first C++ learning project to explore network programming.
+A lightweight HTTP file server implementation using Boost.Beast and Bazel/Docker.
+Created as my very first C++ project.
 
 Usage:
 
@@ -22,3 +22,11 @@ make run
 # client
 curl -i 0.0.0.0:8888
 ```
+
+
+
+TODO:
+- write tests for main
+- get single file retrieval working
+- get directory listing working
+- run container from scratch, see if it works

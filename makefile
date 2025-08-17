@@ -1,12 +1,12 @@
-.PHONY: docker-up # Start Docker containers
+.PHONY: docker-up # Start Docker container
 docker-up:
 	docker compose up -d
 
-.PHONY: docker-build # Build Docker images
+.PHONY: docker-build # Build Docker image
 docker-build:
 	docker compose build
 
-.PHONY: run # Run the server with the default CLI options
+.PHONY: run # Run the server with the default CLI option
 run:
 	docker compose exec main bazel run //:main
 
@@ -38,7 +38,7 @@ clean:
 	docker compose down --rmi all --volumes --remove-orphans
 	docker system prune -a -f
 
-.PHONY: help # generate help message
+.PHONY: help # Generate this help message
 help:
 	@echo "Usage: make [target]\n"
 	@grep '^.PHONY: .* #' makefile | sed 's/\.PHONY: \(.*\) # \(.*\)/\1	\2/' | expand -t20
