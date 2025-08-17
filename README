@@ -21,4 +21,5 @@ make run
 
 # client
 curl -X GET -i http://0.0.0.0:8888/yippie.txt
+open http://0.0.0.0:8888/nested
 ```
