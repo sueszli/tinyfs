@@ -20,10 +20,5 @@ make test
 make run
 
 # client
-curl -X GET -i http://0.0.0.0:8888
+curl -X GET -i http://0.0.0.0:8888/yippie.txt
 ```
-
-
-
-TODO:
-- run container from scratch, see if it works
