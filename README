@@ -8,7 +8,7 @@
 
 A lightweight HTTP file server implementation using Boost.Beast and Bazel/Docker.
 
-> Warning: There has been a breaking change in the bazel install. Reproducibility is impacted.
+> Warning: The Bazel installation script called in the Dockerfile has undergone a breaking change. Reproducibility can no longer be guaranteed.
 
 Usage:
 
