@@ -7,7 +7,8 @@
 
 
 A lightweight HTTP file server implementation using Boost.Beast and Bazel/Docker.
-Created as my very first C++ project, for educational purposes.
+
+> Warning: There has been a breaking change in the bazel install. Reproducibility is impacted.
 
 Usage:
 
